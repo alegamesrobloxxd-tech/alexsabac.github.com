@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cuentas SAB</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px;
+    }
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      margin: 10px auto;
+      display: block;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    .account {
+      background: #222;
+      margin: 5px;
+      padding: 10px;
+      border-radius: 5px;
+      color: limegreen;
+    }
+    .dev-icon {
+      font-size: 24px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📂 Cuentas SAB</h1>
+    <a href="/edit" style="text-decoration: none; color: white;">
+      <span class="dev-icon">✏️</span>
+    </a>
+  </div>
+
+  <form action="/accounts" method="get">
+    <input type="text" name="q" placeholder="Buscar cuenta o brainrot..." class="search-box" value="{{ query }}">
+  </form>
+
+  <div>
+    {% if accounts %}
+      {% for account in accounts %}
+        <div class="account">{{ account }}</div>
+      {% endfor %}
+    {% else %}
+      <p style="text-align:center; color: gray;">No se encontraron cuentas.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

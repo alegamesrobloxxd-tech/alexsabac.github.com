@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cuentas SAB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #121212;
+            color: white;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        #contador-container {
+            display: inline-block;
+            margin-left: 30px;
+            text-align: center;
+        }
+        #contador-container h2 {
+            margin: 0;
+            font-size: 16px;
+            color: #ff4444;
+        }
+        #contador {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+        }
+        .search-box {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        .dev-toggle {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .cuenta {
+            background: #1e1e1e;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+            position: relative;
+        }
+        .cuenta:hover {
+            background: #2a2a2a;
+            cursor: pointer;
+        }
+        .cuenta h2 {
+            margin: 0;
+            color: #00ff88;
+        }
+        .detalles {
+            display: none;
+            margin-top: 10px;
+        }
+        .cuenta.active .detalles {
+            display: block;
+        }
+        .brainrot {
+            margin-left: 20px;
+            position: relative;
+        }
+        .highlight {
+            color: red;
+            font-weight: bold;
+        }
+        .add-btn {
+            display: none;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: green;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+        }
+        .delete-btn {
+            display: none;
+            margin-left: 10px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+        .dev-mode .add-btn,
+        .dev-mode .delete-btn {
+            display: inline-block;
+        }
+        .toggle-pass {
+            background: none;
+            border: none;
+            color: #00aaff;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📂 Cuentas SAB</h1>
+    <!-- 🔥 Contador de admin abuse -->
+    <div id="contador-container">
+        <h2>PRÓXIMO ADMIN ABUSE</h2>
+        <div id="contador">--:--:--</div>
+    </div>
+
+    <!-- 🔎 Barra de búsqueda -->
+    <div class="search-box">
+        <input type="text" id="search" placeholder="Buscar cuenta o brainrot...">
+    </div>
+
+    <!-- ✏️ Botón activar modo edición -->
+    <button class="dev-toggle" id="devToggle">✏️</button>
+
+    <!-- 🔹 Listado de cuentas -->
+    <div id="lista-cuentas">
+        {% for cuenta in cuentas %}
+            <div class="cuenta" data-account="{{ cuenta.account }}">
+                <h2>{{ cuenta.account }}</h2>
+                <div class="detalles">
+                    <p>
+                        <b>Password:</b> 
+                        <span class="password" data-pass="{{ cuenta.password }}">********</span>
+                        <button class="toggle-pass">👁️</button>
+                    </p>
+                    <ul>
+                        {% for br in cuenta.brainrots %}
+                            <li class="brainrot">{{ br }}
+                                <button class="delete-btn" onclick="deleteBrainrot('{{ cuenta.account }}', '{{ br }}', this)">🗑️</button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <button class="add-btn">+</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // 🔹 Toggle de info al hacer clic
+        document.querySelectorAll('.cuenta').forEach(cuenta => {
+            cuenta.addEventListener('click', (e) => {
+                if (!e.target.classList.contains("delete-btn") && 
+                    !e.target.classList.contains("add-btn") && 
+                    !e.target.classList.contains("toggle-pass")) {
+                    cuenta.classList.toggle('active');
+                }
+            });
+        });
+
+        // 🔹 Mostrar/ocultar contraseñas
+        document.querySelectorAll('.toggle-pass').forEach(btn => {
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                let span = btn.previousElementSibling;
+                if (span.textContent === "********") {
+                    span.textContent = span.dataset.pass;
+                } else {
+                    span.textContent = "********";
+                }
+            });
+        });
+
+        // 🔹 Búsqueda con resaltado
+        document.getElementById("search").addEventListener("keyup", function() {
+            let filtro = this.value.toLowerCase();
+            document.querySelectorAll(".cuenta").forEach(cuenta => {
+                let detalles = cuenta.querySelector(".detalles");
+                let texto = cuenta.innerText.toLowerCase();
+                if (texto.includes(filtro)) {
+                    cuenta.style.display = "block";
+                    if (detalles) {
+                        detalles.querySelectorAll("li").forEach(li => {
+                            let original = li.textContent.replace("🗑️", "").trim();
+                            if (filtro && original.toLowerCase().includes(filtro)) {
+                                let regex = new RegExp(`(${filtro})`, "gi");
+                                li.innerHTML = original.replace(regex, `<span class="highlight">$1</span>`) + ' <button class="delete-btn">🗑️</button>';
+                            } else {
+                                li.innerHTML = original + ' <button class="delete-btn">🗑️</button>';
+                            }
+                            attachDelete(li.querySelector(".delete-btn"));
+                        });
+                    }
+                } else {
+                    cuenta.style.display = "none";
+                }
+            });
+        });
+
+        // 🔹 Modo dev toggle
+        const body = document.body;
+        document.getElementById("devToggle").addEventListener("click", () => {
+            body.classList.toggle("dev-mode");
+        });
+
+        // 🔹 Agregar brainrot
+        document.querySelectorAll(".add-btn").forEach(btn => {
+            btn.addEventListener("click", async function(e) {
+                e.stopPropagation();
+                let cuenta = btn.closest(".cuenta").dataset.account;
+                let ul = btn.closest(".cuenta").querySelector("ul");
+                let nuevo = prompt("Introducir nuevo brainrot a esta cuenta:");
+                if (nuevo) {
+                    const response = await fetch("/api/add_brainrot", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ account: cuenta, brainrot: nuevo })
+                    });
+                    if (response.ok) {
+                        let li = document.createElement("li");
+                        li.classList.add("brainrot");
+                        li.innerHTML = nuevo + ` <button class="delete-btn" onclick="deleteBrainrot('${cuenta}', '${nuevo}', this)">🗑️</button>`;
+                        ul.appendChild(li);
+                    }
+                }
+            });
+        });
+
+        // 🔹 Eliminar brainrot
+        async function deleteBrainrot(account, brainrot, btn) {
+            if (!confirm("¿Quieres eliminar este brainrot?")) return;
+            const response = await fetch("/api/delete_brainrot", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ account: account, brainrot: brainrot })
+            });
+            if (response.ok) {
+                btn.parentElement.remove();
+            }
+        }
+
+        function attachDelete(btn) {
+            if (!btn) return;
+            btn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                let account = btn.closest(".cuenta").dataset.account;
+                let brainrot = btn.parentElement.textContent.replace("🗑️", "").trim();
+                deleteBrainrot(account, brainrot, btn);
+            });
+        }
+        document.querySelectorAll(".delete-btn").forEach(attachDelete);
+
+        // 🔥 Contador de Admin Abuse
+        function iniciarContador(fechaObjetivo) {
+            function actualizar() {
+                let ahora = new Date().getTime();
+                let distancia = fechaObjetivo - ahora;
+
+                if (distancia < 0) {
+                    document.getElementById("contador").textContent = "¡YA EMPEZÓ!";
+                    clearInterval(intervalo);
+                    return;
+                }
+
+                let dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                let horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                let segundos = Math.floor((distancia % (1000 * 60)) / 1000);
+
+                let texto = (dias > 0 ? dias + "d " : "") +
+                            (horas < 10 ? "0" + horas : horas) + ":" +
+                            (minutos < 10 ? "0" + minutos : minutos) + ":" +
+                            (segundos < 10 ? "0" + segundos : segundos);
+
+                document.getElementById("contador").textContent = texto;
+            }
+
+            actualizar();
+            let intervalo = setInterval(actualizar, 1000);
+        }
+
+        // ⚠️ Cambia aquí la fecha del evento fácilmente
+        let fechaEvento = new Date("Sep 09, 2025 16:00:00").getTime();
+        iniciarContador(fechaEvento);
+    </script>
+</body>
+</html>
